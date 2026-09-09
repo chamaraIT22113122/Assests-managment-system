@@ -10,7 +10,7 @@ const EmployeeDashboard = () => {
 
   useEffect(() => {
     if (user?.id) {
-      fetch(`http://localhost:5000/api/tickets/my/${user.id}`)
+      fetch(`/api/tickets/my/${user.id}`)
         .then(res => res.json())
         .then(data => {
           if (Array.isArray(data)) {

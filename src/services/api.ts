@@ -141,5 +141,33 @@ export const api = {
       });
       return res.json();
     }
+  },
+  licenses: {
+    getAll: async () => {
+      const res = await fetch(`${BASE_URL}/licenses`);
+      return res.json();
+    },
+    create: async (data: any) => {
+      const res = await fetch(`${BASE_URL}/licenses`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      return res.json();
+    },
+    update: async (id: string, data: any) => {
+      const res = await fetch(`${BASE_URL}/licenses/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      return res.json();
+    },
+    delete: async (id: string) => {
+      const res = await fetch(`${BASE_URL}/licenses/${id}`, {
+        method: 'DELETE'
+      });
+      return res.json();
+    }
   }
 };

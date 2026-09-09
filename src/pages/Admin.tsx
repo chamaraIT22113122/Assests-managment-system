@@ -10,6 +10,7 @@ const SECTIONS = [
   { key: 'maintenance',  label: 'Maintenance',  icon: '🔧' },
   { key: 'companies',    label: 'Companies',    icon: '🏢' },
   { key: 'products',     label: 'Products',     icon: '📦' },
+  { key: 'licenses',     label: 'Licenses',     icon: '🔑' },
   { key: 'users',        label: 'Members',      icon: '👥' },
   { key: 'recycle',      label: 'Recycle Bin',  icon: '🗑️' },
   { key: 'notifications',label: 'Notifications',icon: '🔔' },
@@ -51,7 +52,7 @@ const AdminModal = ({ admin, onClose, onSaved }: any) => {
     e.preventDefault();
     setSaving(true);
     try {
-      const url = isEdit ? `http://localhost:5000/api/admins/${admin._id}` : 'http://localhost:5000/api/admins';
+      const url = isEdit ? `/api/admins/${admin._id}` : '/api/admins';
       const method = isEdit ? 'PUT' : 'POST';
       const res = await fetch(url, {
         method, headers: { 'Content-Type': 'application/json' },
@@ -161,7 +162,7 @@ const DeleteModal = ({ admin, onClose, onDeleted }: any) => {
   const handleDelete = async () => {
     setDeleting(true);
     try {
-      const res = await fetch(`http://localhost:5000/api/admins/${admin._id}`, { method: 'DELETE' });
+      const res = await fetch(`/api/admins/${admin._id}`, { method: 'DELETE' });
       const data = await res.json();
       if (data.error) alert(data.error);
       else { onDeleted(); onClose(); }
@@ -225,7 +226,7 @@ const Admin = () => {
   const fetchAdmins = async () => {
     setLoading(true);
     try {
-      const res = await fetch('http://localhost:5000/api/admins');
+      const res = await fetch('/api/admins');
       const data = await res.json();
       if (Array.isArray(data)) {
         // Deduplicate: keep only one System Administrator

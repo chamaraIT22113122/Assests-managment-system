@@ -67,7 +67,7 @@ const JobModal = ({ job, onClose, onSaved, canEdit }: any) => {
   const handleSave = async () => {
     setSaving(true);
     const status = stage === 'Completed' ? 'Completed' : stage === 'Received' ? 'Pending' : 'In Progress';
-    await fetch(`http://localhost:5000/api/maintenance/${job._id}`, {
+    await fetch(`/api/maintenance/${job._id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ stage, status, assignedTo, note: note || undefined }),
@@ -191,7 +191,7 @@ const CreateJobModal = ({ onClose, onSaved }: any) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
-    await fetch('http://localhost:5000/api/maintenance', {
+    await fetch('/api/maintenance', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(form),
@@ -279,7 +279,7 @@ const Maintenance = () => {
   const fetchJobs = async () => {
     setLoading(true);
     try {
-      const res = await fetch('http://localhost:5000/api/maintenance');
+      const res = await fetch('/api/maintenance');
       const data = await res.json();
       setJobs(Array.isArray(data) ? data : []);
     } catch { setJobs([]); }
@@ -289,7 +289,7 @@ const Maintenance = () => {
   const handleDelete = async (id: string) => {
     if (!canEdit) return;
     if (!confirm('Delete this maintenance job?')) return;
-    await fetch(`http://localhost:5000/api/maintenance/${id}`, { method: 'DELETE' });
+    await fetch(`/api/maintenance/${id}`, { method: 'DELETE' });
     fetchJobs();
   };
 
@@ -406,7 +406,7 @@ const Maintenance = () => {
                           onClick={async (e) => {
                             e.stopPropagation();
                             const next = STAGES[stageIdx + 1];
-                            await fetch(`http://localhost:5000/api/maintenance/${job._id}`, {
+                            await fetch(`/api/maintenance/${job._id}`, {
                               method: 'PUT',
                               headers: { 'Content-Type': 'application/json' },
                               body: JSON.stringify({ stage: next.key, status: next.key === 'Completed' ? 'Completed' : 'In Progress' }),

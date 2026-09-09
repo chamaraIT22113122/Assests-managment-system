@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { LayoutGrid, Building2, Package, Users, Settings, UserCircle, Trash, Bell, ChevronDown, ChevronRight, Sun, Moon, Briefcase, HeadphonesIcon, LogOut, Wrench, X } from 'lucide-react';
+import { LayoutGrid, Building2, Package, Users, Settings, UserCircle, Trash, Bell, ChevronDown, ChevronRight, Sun, Moon, Briefcase, HeadphonesIcon, LogOut, Wrench, X, Key } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
 import { useAuth } from '../../context/AuthContext';
 
@@ -82,6 +82,7 @@ const Sidebar = ({ isMobileMenuOpen, setIsMobileMenuOpen }: any) => {
         {hasAccess('products') && <NavItem to="/admin/products" icon={Package} label="Products" onClick={closeMenu} />}
         {hasAccess('users') && <NavItem to="/admin/users" icon={Users} label="Members" onClick={closeMenu} />}
         {hasAccess('assets') && <NavItem to="/admin/assets" icon={Settings} label="Assets" onClick={closeMenu} />}
+        {hasAccess('assets') && <NavItem to="/admin/licenses" icon={Key} label="Licenses" onClick={closeMenu} />}
         {hasAccess('tickets') && <NavItem to="/admin/tickets" icon={HeadphonesIcon} label="Tickets" onClick={closeMenu} />}
         {hasAccess('maintenance') && <NavItem to="/admin/maintenance" icon={Wrench} label="Maintenance" onClick={closeMenu} />}
         

@@ -8,6 +8,7 @@ import Companies from './pages/Companies';
 import Products from './pages/Products';
 import Users from './pages/Users';
 import Admin from './pages/Admin';
+import Licenses from './pages/Licenses';
 import RecycleBin from './pages/RecycleBin';
 import Notifications from './pages/Notifications';
 import MemberProfile from './pages/MemberProfile';
@@ -59,6 +60,7 @@ function App() {
               <Route path="users/:id" element={<MemberProfile />} />
               <Route path="maintenance" element={<Maintenance />} />
               <Route path="admin" element={<Admin />} />
+              <Route path="licenses" element={<Licenses />} />
               <Route path="recycle-bin" element={<RecycleBin />} />
               <Route path="notifications" element={<Notifications />} />
             </Route>

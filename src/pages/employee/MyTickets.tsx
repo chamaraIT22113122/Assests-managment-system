@@ -38,7 +38,7 @@ const MaintenanceProgress = ({ ticketId }: { ticketId: string }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch(`http://localhost:5000/api/maintenance/by-ticket/${ticketId}`)
+    fetch(`/api/maintenance/by-ticket/${ticketId}`)
       .then(r => r.json())
       .then(d => { setJob(d); setLoading(false); })
       .catch(() => setLoading(false));
@@ -116,7 +116,7 @@ const RaiseTicketModal = ({ onClose, onSubmitted, user }: any) => {
   });
 
   useEffect(() => {
-    fetch('http://localhost:5000/api/assets').then(r => r.json()).then(d => setAssets(Array.isArray(d) ? d : [])).catch(() => {});
+    fetch('/api/assets').then(r => r.json()).then(d => setAssets(Array.isArray(d) ? d : [])).catch(() => {});
   }, []);
 
   const handleCategorySelect = (cat: string) => { setForm({ ...form, category: cat, title: cat + ' - ' }); setStep(2); };
@@ -133,7 +133,7 @@ const RaiseTicketModal = ({ onClose, onSubmitted, user }: any) => {
       form.urgencyReason ? `\n**Urgency Reason:**\n${form.urgencyReason}` : '',
     ].filter(Boolean).join('\n');
     try {
-      const res = await fetch('http://localhost:5000/api/tickets', {
+      const res = await fetch('/api/tickets', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ title: form.title, description: fullDescription, priority: form.priority, submittedBy: user?.id }),
       });
@@ -251,7 +251,7 @@ const MyTickets = () => {
   const fetchTickets = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch(`http://localhost:5000/api/tickets/my/${user?.id}`);
+      const res = await fetch(`/api/tickets/my/${user?.id}`);
       const data = await res.json();
       setTickets(Array.isArray(data) ? data : []);
     } catch { setTickets([]); }

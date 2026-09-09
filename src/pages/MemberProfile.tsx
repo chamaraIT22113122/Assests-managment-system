@@ -47,9 +47,9 @@ const MemberProfile = () => {
       setLoading(true);
       try {
         const [usersRes, assetsRes, ticketsRes] = await Promise.all([
-          fetch('http://localhost:5000/api/users').then(r => r.json()),
-          fetch('http://localhost:5000/api/assets').then(r => r.json()),
-          fetch('http://localhost:5000/api/tickets').then(r => r.json()),
+          fetch('/api/users').then(r => r.json()),
+          fetch('/api/assets').then(r => r.json()),
+          fetch('/api/tickets').then(r => r.json()),
         ]);
 
         const users = Array.isArray(usersRes) ? usersRes : [];

@@ -73,6 +73,18 @@ async function initDB() {
       )
     `);
 
+    await db(`
+      CREATE TABLE IF NOT EXISTS licenses (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        name TEXT NOT NULL,
+        key TEXT,
+        seats INTEGER DEFAULT 1,
+        renewal_date DATE,
+        company TEXT,
+        created_at TIMESTAMPTZ DEFAULT NOW()
+      )
+    `);
+
     // Add permissions and company_name column to existing tables without it
     await db(`ALTER TABLE users ADD COLUMN IF NOT EXISTS permissions JSONB DEFAULT '{"assets":"view","tickets":"view","companies":"view","products":"view","users":"none"}'`).catch(() => {});
     await db(`ALTER TABLE users ADD COLUMN IF NOT EXISTS company_name TEXT`).catch(() => {});
@@ -239,10 +251,10 @@ app.put('/api/assets/:id', async (req, res) => {
     let history = asset.history || [];
 
     if (req.body.assignedTo !== asset.assigned_to) {
-      history.push({ date: new Date().toISOString(), action: 'Reassigned', user: 'System', note: `Assigned to ${req.body.assignedTo || 'Unassigned'}` });
+      history.push({ date: new Date().toISOString(), action: 'Reassigned', user: req.body.adminName || 'Admin', note: `Assigned to ${req.body.assignedTo || 'Unassigned'}` });
     }
     if (req.body.status && req.body.status !== asset.status) {
-      history.push({ date: new Date().toISOString(), action: 'Status Changed', user: 'System', note: `Status changed to ${req.body.status}` });
+      history.push({ date: new Date().toISOString(), action: 'Status Changed', user: req.body.adminName || 'Admin', note: `Status changed to ${req.body.status}` });
     }
 
     const { rows } = await db(`
@@ -349,6 +361,9 @@ app.put('/api/tickets/:id', async (req, res) => {
     }
     if (req.body.newNote) {
       history.push({ date: new Date().toISOString(), action: 'Note Added', user: req.body.adminName || 'Admin', note: req.body.newNote });
+    }
+    if (req.body.assignedTo && req.body.assignedTo !== ticket.assigned_to) {
+      history.push({ date: new Date().toISOString(), action: 'Reassigned', user: req.body.adminName || 'Admin', note: `Assigned ticket to ${req.body.assigneeName || 'Admin'}` });
     }
 
     const { rows } = await db(`
@@ -621,9 +636,9 @@ app.put('/api/admins/:id', async (req, res) => {
       `UPDATE users SET 
         name = COALESCE($1, name),
         email = COALESCE($2, email),
-        password = CASE WHEN $3 IS NOT NULL AND $3 != '' THEN $3 ELSE password END,
+        password = CASE WHEN $3::text IS NOT NULL AND $3::text != '' THEN $3::text ELSE password END,
         can_edit = COALESCE($4, can_edit),
-        permissions = COALESCE($5, permissions)
+        permissions = COALESCE($5::jsonb, permissions)
        WHERE id = $6 AND role = 'admin' RETURNING *`,
       [req.body.name, req.body.email, req.body.password || null, req.body.canEdit,
        req.body.permissions ? JSON.stringify(req.body.permissions) : null, req.params.id]
@@ -650,6 +665,58 @@ app.delete('/api/admins/:id', async (req, res) => {
 // ─────────────────────────────────────────────
 
 // Get all maintenance jobs
+// ─────────────────────────────────────────────
+// LICENSES API
+// ─────────────────────────────────────────────
+app.get('/api/licenses', async (req, res) => {
+  try {
+    const { rows } = await db('SELECT * FROM licenses ORDER BY created_at DESC');
+    res.json(rows.map(l => ({ _id: l.id, ...l })));
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/licenses', async (req, res) => {
+  try {
+    const { rows } = await db(
+      'INSERT INTO licenses (name, key, seats, renewal_date, company) VALUES ($1,$2,$3,$4,$5) RETURNING *',
+      [req.body.name, req.body.key, req.body.seats, req.body.renewalDate || req.body.renewal_date, req.body.company]
+    );
+    res.json({ success: true, license: { _id: rows[0].id, ...rows[0] } });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+app.put('/api/licenses/:id', async (req, res) => {
+  try {
+    const { rows } = await db(
+      'UPDATE licenses SET name=COALESCE($1,name), key=COALESCE($2,key), seats=COALESCE($3,seats), renewal_date=COALESCE($4,renewal_date), company=COALESCE($5,company) WHERE id=$6 RETURNING *',
+      [req.body.name, req.body.key, req.body.seats, req.body.renewalDate || req.body.renewal_date, req.body.company, req.params.id]
+    );
+    res.json({ success: true, license: { _id: rows[0].id, ...rows[0] } });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+app.delete('/api/licenses/:id', async (req, res) => {
+  try {
+    await db('DELETE FROM licenses WHERE id=$1', [req.params.id]);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+app.get('/api/tickets/maintenance', async (req, res) => {
+  try {
+    const { rows } = await db('SELECT * FROM maintenance ORDER BY created_at DESC');
+    res.json(rows.map(r => ({ _id: r.id, ...r })));
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
 app.get('/api/maintenance', async (req, res) => {
   try {
     const { rows } = await db('SELECT * FROM maintenance ORDER BY created_at DESC');

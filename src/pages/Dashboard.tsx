@@ -53,10 +53,10 @@ const Dashboard = () => {
     const load = async () => {
       try {
         const [a, t, c, u] = await Promise.all([
-          fetch('http://localhost:5000/api/assets').then(r => r.json()),
-          fetch('http://localhost:5000/api/tickets').then(r => r.json()),
-          fetch('http://localhost:5000/api/companies').then(r => r.json()),
-          fetch('http://localhost:5000/api/users').then(r => r.json()),
+          fetch('/api/assets').then(r => r.json()),
+          fetch('/api/tickets').then(r => r.json()),
+          fetch('/api/companies').then(r => r.json()),
+          fetch('/api/users').then(r => r.json()),
         ]);
         setAssets(Array.isArray(a) ? a : []);
         setTickets(Array.isArray(t) ? t : []);

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, X, Search, Eye, Trash2, Edit, Clock, User, Filter, ChevronDown, MessageSquare, AlertTriangle } from 'lucide-react';
+import { Plus, X, Search, Eye, Trash2, Clock, MessageSquare, LayoutList, Kanban, GripVertical } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 const STATUS_OPTIONS = ['Open', 'In Progress', 'Resolved', 'Closed'];
@@ -27,8 +27,9 @@ const PRIORITY_DOT: Record<string, string> = {
 };
 
 // ── View / Update Ticket Modal ─────────────────────────────
-const TicketModal = ({ ticket, onClose, onSaved, canEdit }: any) => {
+const TicketModal = ({ ticket, onClose, onSaved, canEdit, admins, currentUser }: any) => {
   const [status, setStatus] = useState(ticket.status);
+  const [assignedTo, setAssignedTo] = useState(ticket.assignedTo || '');
   const [newNote, setNewNote] = useState('');
   const [saving, setSaving] = useState(false);
   const [sendingMaint, setSendingMaint] = useState(false);
@@ -37,10 +38,17 @@ const TicketModal = ({ ticket, onClose, onSaved, canEdit }: any) => {
     e.preventDefault();
     setSaving(true);
     try {
-      await fetch(`http://localhost:5000/api/tickets/${ticket._id}`, {
+      const assigneeName = admins?.find((a:any) => a._id === assignedTo)?.name || '';
+      await fetch(`/api/tickets/${ticket._id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status, newNote, adminName: 'Admin' }),
+        body: JSON.stringify({ 
+          status, 
+          assignedTo,
+          assigneeName,
+          newNote, 
+          adminName: currentUser?.name || 'Admin' 
+        }),
       });
       onSaved();
       onClose();
@@ -55,7 +63,7 @@ const TicketModal = ({ ticket, onClose, onSaved, canEdit }: any) => {
     if (!confirm('Send this ticket to the Maintenance queue?')) return;
     setSendingMaint(true);
     try {
-      await fetch('http://localhost:5000/api/maintenance', {
+      await fetch('/api/maintenance', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -145,15 +153,23 @@ const TicketModal = ({ ticket, onClose, onSaved, canEdit }: any) => {
         {canEdit && (
           <form onSubmit={handleSave} className="p-6 border-t border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 shrink-0 space-y-3">
             <h3 className="text-sm font-bold text-slate-700 dark:text-slate-200">Update Ticket</h3>
-            <div className="flex gap-3">
-              <div className="w-1/3">
+            <div className="flex flex-wrap gap-3">
+              <div className="w-full sm:w-1/4">
                 <label className="block text-xs font-medium text-slate-500 mb-1">Status</label>
                 <select value={status} onChange={e => setStatus(e.target.value)}
                   className="w-full px-3 py-2 border border-slate-200 dark:border-slate-700 rounded-lg dark:bg-slate-900 dark:text-white outline-none focus:border-[#3b5998] text-sm">
                   {STATUS_OPTIONS.map(s => <option key={s}>{s}</option>)}
                 </select>
               </div>
-              <div className="flex-1">
+              <div className="w-full sm:w-1/4">
+                <label className="block text-xs font-medium text-slate-500 mb-1">Assigned To</label>
+                <select value={assignedTo} onChange={e => setAssignedTo(e.target.value)}
+                  className="w-full px-3 py-2 border border-slate-200 dark:border-slate-700 rounded-lg dark:bg-slate-900 dark:text-white outline-none focus:border-[#3b5998] text-sm">
+                  <option value="">Unassigned</option>
+                  {admins.map((a:any) => <option key={a._id} value={a._id}>{a.name}</option>)}
+                </select>
+              </div>
+              <div className="w-full sm:flex-1">
                 <label className="block text-xs font-medium text-slate-500 mb-1">Add Note (optional)</label>
                 <input type="text" value={newNote} onChange={e => setNewNote(e.target.value)}
                   placeholder="Type a note or update for the employee..."
@@ -190,7 +206,7 @@ const CreateTicketModal = ({ onClose, onSaved }: any) => {
     e.preventDefault();
     setSaving(true);
     try {
-      await fetch('http://localhost:5000/api/tickets', {
+      await fetch('/api/tickets', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form),
@@ -256,21 +272,26 @@ const CreateTicketModal = ({ onClose, onSaved }: any) => {
 const TicketsList = () => {
   const { user } = useAuth();
   const [tickets, setTickets] = useState<any[]>([]);
+  const [admins, setAdmins] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState('All');
   const [filterPriority, setFilterPriority] = useState('All');
   const [selectedTicket, setSelectedTicket] = useState<any>(null);
   const [showCreate, setShowCreate] = useState(false);
+  const [viewMode, setViewMode] = useState<'list'|'kanban'>('list');
 
   const canEdit = user?.name === 'System Administrator' || user?.permissions?.['tickets'] === 'edit';
 
-  useEffect(() => { fetchTickets(); }, []);
+  useEffect(() => { 
+    fetchTickets(); 
+    if (canEdit) fetchAdmins();
+  }, [canEdit]);
 
   const fetchTickets = async () => {
     setLoading(true);
     try {
-      const res = await fetch('http://localhost:5000/api/tickets');
+      const res = await fetch('/api/tickets');
       const data = await res.json();
       setTickets(Array.isArray(data) ? data : []);
     } catch {
@@ -280,10 +301,18 @@ const TicketsList = () => {
     }
   };
 
+  const fetchAdmins = async () => {
+    try {
+      const res = await fetch('/api/admins');
+      const data = await res.json();
+      setAdmins(data);
+    } catch {}
+  };
+
   const handleDelete = async (id: string) => {
     if (!canEdit) return;
     if (!confirm('Delete this ticket permanently?')) return;
-    await fetch(`http://localhost:5000/api/tickets/${id}`, { method: 'DELETE' });
+    await fetch(`/api/tickets/${id}`, { method: 'DELETE' });
     fetchTickets();
   };
 
@@ -295,6 +324,37 @@ const TicketsList = () => {
     const matchPriority = filterPriority === 'All' || t.priority === filterPriority;
     return matchSearch && matchStatus && matchPriority;
   });
+
+  // Kanban Drag and Drop Handlers
+  const handleDragStart = (e: React.DragEvent, ticketId: string) => {
+    e.dataTransfer.setData('ticketId', ticketId);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+  };
+
+  const handleDrop = async (e: React.DragEvent, status: string) => {
+    e.preventDefault();
+    const ticketId = e.dataTransfer.getData('ticketId');
+    if (!ticketId || !canEdit) return;
+
+    const ticket = tickets.find(t => t._id === ticketId);
+    if (ticket && ticket.status !== status) {
+      // Optimistic update
+      setTickets(prev => prev.map(t => t._id === ticketId ? { ...t, status } : t));
+      try {
+        await fetch(`/api/tickets/${ticketId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status, adminName: user?.name || 'Admin' }),
+        });
+        fetchTickets(); // Refresh history
+      } catch {
+        fetchTickets(); // Revert on failure
+      }
+    }
+  };
 
   // Stats
   const stats = [
@@ -312,12 +372,28 @@ const TicketsList = () => {
           <h1 className="text-2xl font-bold text-slate-800 dark:text-white">Support Tickets</h1>
           <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">Manage and respond to all IT support requests.</p>
         </div>
-        {canEdit && (
-          <button onClick={() => setShowCreate(true)}
-            className="bg-[#3b5998] hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors shadow-sm flex items-center gap-2">
-            <Plus size={17} /> Create Ticket
-          </button>
-        )}
+        <div className="flex items-center gap-2">
+          <div className="flex items-center bg-slate-100 dark:bg-slate-800 p-1 rounded-lg border border-slate-200 dark:border-slate-700">
+            <button 
+              onClick={() => setViewMode('list')}
+              className={`p-1.5 rounded-md flex items-center justify-center transition-colors ${viewMode === 'list' ? 'bg-white dark:bg-slate-700 shadow-sm text-[#3b5998] dark:text-blue-400' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
+            >
+              <LayoutList size={18} />
+            </button>
+            <button 
+              onClick={() => setViewMode('kanban')}
+              className={`p-1.5 rounded-md flex items-center justify-center transition-colors ${viewMode === 'kanban' ? 'bg-white dark:bg-slate-700 shadow-sm text-[#3b5998] dark:text-blue-400' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
+            >
+              <Kanban size={18} />
+            </button>
+          </div>
+          {canEdit && (
+            <button onClick={() => setShowCreate(true)}
+              className="bg-[#3b5998] hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors shadow-sm flex items-center gap-2">
+              <Plus size={17} /> Create
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Stats */}
@@ -330,7 +406,7 @@ const TicketsList = () => {
         ))}
       </div>
 
-      {/* Filters */}
+      {/* Filters (Only for List View for simplicity, or both) */}
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
           <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
@@ -338,132 +414,186 @@ const TicketsList = () => {
             className="w-full pl-10 pr-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl dark:bg-slate-800 dark:text-white outline-none focus:border-[#3b5998] text-sm"
             placeholder="Search by title, member name, or ID..." />
         </div>
-        <div className="flex gap-2">
-          <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)}
-            className="px-3 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl dark:bg-slate-800 dark:text-white outline-none text-sm focus:border-[#3b5998]">
-            <option value="All">All Status</option>
-            {STATUS_OPTIONS.map(s => <option key={s}>{s}</option>)}
-          </select>
-          <select value={filterPriority} onChange={e => setFilterPriority(e.target.value)}
-            className="px-3 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl dark:bg-slate-800 dark:text-white outline-none text-sm focus:border-[#3b5998]">
-            <option value="All">All Priority</option>
-            <option>Low</option><option>Medium</option><option>High</option><option>Critical</option>
-          </select>
-        </div>
+        {viewMode === 'list' && (
+          <div className="flex gap-2">
+            <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)}
+              className="px-3 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl dark:bg-slate-800 dark:text-white outline-none text-sm focus:border-[#3b5998]">
+              <option value="All">All Status</option>
+              {STATUS_OPTIONS.map(s => <option key={s}>{s}</option>)}
+            </select>
+            <select value={filterPriority} onChange={e => setFilterPriority(e.target.value)}
+              className="px-3 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl dark:bg-slate-800 dark:text-white outline-none text-sm focus:border-[#3b5998]">
+              <option value="All">All Priority</option>
+              <option>Low</option><option>Medium</option><option>High</option><option>Critical</option>
+            </select>
+          </div>
+        )}
       </div>
 
-      {/* Table */}
-      <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
-        className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-slate-50 dark:bg-slate-700/40 border-b border-slate-100 dark:border-slate-700">
-                <th className="py-3 px-4 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Ticket ID</th>
-                <th className="py-3 px-4 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Title</th>
-                <th className="py-3 px-4 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Submitted By</th>
-                <th className="py-3 px-4 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Priority</th>
-                <th className="py-3 px-4 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Status</th>
-                <th className="py-3 px-4 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Date</th>
-                <th className="py-3 px-4 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {loading ? (
-                [...Array(5)].map((_, i) => (
-                  <tr key={i} className="border-b border-slate-50 dark:border-slate-700/50">
-                    {[...Array(7)].map((_, j) => (
-                      <td key={j} className="py-3 px-4">
-                        <div className="h-5 bg-slate-100 dark:bg-slate-700 rounded animate-pulse" />
-                      </td>
-                    ))}
-                  </tr>
-                ))
-              ) : filtered.length === 0 ? (
-                <tr>
-                  <td colSpan={7} className="py-16 text-center text-slate-500 dark:text-slate-400">
-                    <div className="flex flex-col items-center gap-2">
-                      <MessageSquare size={32} className="text-slate-300 dark:text-slate-600" />
-                      <p className="font-medium">No tickets found</p>
-                    </div>
-                  </td>
+      {viewMode === 'list' ? (
+        /* List View */
+        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
+          className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-slate-50 dark:bg-slate-700/40 border-b border-slate-100 dark:border-slate-700">
+                  <th className="py-3 px-4 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Ticket ID</th>
+                  <th className="py-3 px-4 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Title</th>
+                  <th className="py-3 px-4 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Submitted By</th>
+                  <th className="py-3 px-4 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Priority</th>
+                  <th className="py-3 px-4 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Status</th>
+                  <th className="py-3 px-4 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Date</th>
+                  <th className="py-3 px-4 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-right">Actions</th>
                 </tr>
-              ) : (
-                filtered.map((ticket, idx) => (
-                  <tr key={ticket._id}
-                    className={`border-b border-slate-50 dark:border-slate-700/40 hover:bg-slate-50 dark:hover:bg-slate-700/20 transition-colors ${idx % 2 === 0 ? '' : 'bg-slate-50/30 dark:bg-slate-800/30'}`}>
-                    <td className="py-3 px-4">
+              </thead>
+              <tbody>
+                {loading ? (
+                  [...Array(5)].map((_, i) => (
+                    <tr key={i} className="border-b border-slate-50 dark:border-slate-700/50">
+                      {[...Array(7)].map((_, j) => (
+                        <td key={j} className="py-3 px-4">
+                          <div className="h-5 bg-slate-100 dark:bg-slate-700 rounded animate-pulse" />
+                        </td>
+                      ))}
+                    </tr>
+                  ))
+                ) : filtered.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} className="py-16 text-center text-slate-500 dark:text-slate-400">
+                      <div className="flex flex-col items-center gap-2">
+                        <MessageSquare size={32} className="text-slate-300 dark:text-slate-600" />
+                        <p className="font-medium">No tickets found</p>
+                      </div>
+                    </td>
+                  </tr>
+                ) : (
+                  filtered.map((ticket, idx) => (
+                    <tr key={ticket._id}
+                      className={`border-b border-slate-50 dark:border-slate-700/40 hover:bg-slate-50 dark:hover:bg-slate-700/20 transition-colors ${idx % 2 === 0 ? '' : 'bg-slate-50/30 dark:bg-slate-800/30'}`}>
+                      <td className="py-3 px-4">
+                        <span className="font-mono text-xs font-bold text-slate-400 dark:text-slate-500">
+                          #{ticket._id?.slice(-8).toUpperCase()}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4 max-w-[220px]">
+                        <p className="text-sm font-semibold text-slate-800 dark:text-white truncate">{ticket.title}</p>
+                        {ticket.history?.length > 0 && (
+                          <span className="text-xs text-slate-400 flex items-center gap-1 mt-0.5">
+                            <MessageSquare size={10} /> {ticket.history.filter((h:any) => h.action === 'Note Added').length} notes
+                          </span>
+                        )}
+                      </td>
+                      <td className="py-3 px-4">
+                        <div className="flex items-center gap-2">
+                          <div className="w-7 h-7 rounded-full bg-[#3b5998]/10 text-[#3b5998] dark:text-blue-400 flex items-center justify-center font-bold text-xs shrink-0">
+                            {(ticket.submittedBy?.name || 'U').charAt(0).toUpperCase()}
+                          </div>
+                          <span className="text-sm text-slate-700 dark:text-slate-300 truncate max-w-[100px]">
+                            {ticket.submittedBy?.name || 'Unknown'}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="py-3 px-4">
+                        <span className={`inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-full border ${PRIORITY_STYLES[ticket.priority] || PRIORITY_STYLES['Medium']}`}>
+                          <span className={`w-1.5 h-1.5 rounded-full ${PRIORITY_DOT[ticket.priority] || 'bg-amber-400'}`} />
+                          {ticket.priority}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4">
+                        <span className={`text-xs font-bold px-2.5 py-1 rounded-full border ${STATUS_STYLES[ticket.status] || STATUS_STYLES['Open']}`}>
+                          {ticket.status}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4">
+                        <span className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1">
+                          <Clock size={11} />
+                          {new Date(ticket.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4">
+                        <div className="flex justify-end gap-1">
+                          <button onClick={() => setSelectedTicket(ticket)}
+                            title={canEdit ? "View & Update" : "View Details"}
+                            className="p-1.5 rounded-lg text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors">
+                            <Eye size={16} />
+                          </button>
+                          {canEdit && (
+                            <button onClick={() => handleDelete(ticket._id)}
+                              title="Delete"
+                              className="p-1.5 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
+                              <Trash2 size={16} />
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+          {/* Footer row count */}
+          {!loading && filtered.length > 0 && (
+            <div className="px-4 py-3 border-t border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 text-xs text-slate-500 dark:text-slate-400">
+              Showing {filtered.length} of {tickets.length} tickets
+            </div>
+          )}
+        </motion.div>
+      ) : (
+        /* Kanban View */
+        <div className="flex gap-4 overflow-x-auto pb-4 custom-scrollbar min-h-[500px]">
+          {STATUS_OPTIONS.map(status => (
+            <div 
+              key={status} 
+              onDragOver={handleDragOver}
+              onDrop={(e) => handleDrop(e, status)}
+              className="flex-shrink-0 w-[300px] bg-slate-100 dark:bg-slate-800/50 rounded-2xl flex flex-col p-3 border border-slate-200 dark:border-slate-700"
+            >
+              <div className="flex items-center justify-between px-2 py-2 mb-2">
+                <h3 className="font-bold text-sm text-slate-700 dark:text-slate-200 uppercase tracking-wide">{status}</h3>
+                <span className="bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400 text-xs font-bold px-2 py-0.5 rounded-full">
+                  {filtered.filter(t => t.status === status).length}
+                </span>
+              </div>
+              <div className="flex-1 space-y-3 overflow-y-auto">
+                {filtered.filter(t => t.status === status).map(ticket => (
+                  <motion.div 
+                    layoutId={ticket._id}
+                    key={ticket._id}
+                    draggable={canEdit}
+                    onDragStart={(e) => handleDragStart(e as any, ticket._id)}
+                    onClick={() => setSelectedTicket(ticket)}
+                    className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 cursor-pointer hover:border-blue-300 dark:hover:border-blue-600 transition-colors group"
+                  >
+                    <div className="flex justify-between items-start mb-2">
                       <span className="font-mono text-xs font-bold text-slate-400 dark:text-slate-500">
                         #{ticket._id?.slice(-8).toUpperCase()}
                       </span>
-                    </td>
-                    <td className="py-3 px-4 max-w-[220px]">
-                      <p className="text-sm font-semibold text-slate-800 dark:text-white truncate">{ticket.title}</p>
-                      {ticket.history?.length > 0 && (
-                        <span className="text-xs text-slate-400 flex items-center gap-1 mt-0.5">
-                          <MessageSquare size={10} /> {ticket.history.filter((h:any) => h.action === 'Note Added').length} notes
-                        </span>
-                      )}
-                    </td>
-                    <td className="py-3 px-4">
+                      {canEdit && <GripVertical size={14} className="text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity" />}
+                    </div>
+                    <p className="text-sm font-semibold text-slate-800 dark:text-white mb-3 line-clamp-2">{ticket.title}</p>
+                    <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <div className="w-7 h-7 rounded-full bg-[#3b5998]/10 text-[#3b5998] dark:text-blue-400 flex items-center justify-center font-bold text-xs shrink-0">
+                        <div className="w-6 h-6 rounded-full bg-[#3b5998]/10 text-[#3b5998] dark:text-blue-400 flex items-center justify-center font-bold text-[10px]">
                           {(ticket.submittedBy?.name || 'U').charAt(0).toUpperCase()}
                         </div>
-                        <span className="text-sm text-slate-700 dark:text-slate-300 truncate max-w-[100px]">
-                          {ticket.submittedBy?.name || 'Unknown'}
+                        <span className="text-xs text-slate-500 truncate max-w-[80px]">
+                          {ticket.submittedBy?.name?.split(' ')[0] || 'Unknown'}
                         </span>
                       </div>
-                    </td>
-                    <td className="py-3 px-4">
-                      <span className={`inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-full border ${PRIORITY_STYLES[ticket.priority] || PRIORITY_STYLES['Medium']}`}>
-                        <span className={`w-1.5 h-1.5 rounded-full ${PRIORITY_DOT[ticket.priority] || 'bg-amber-400'}`} />
-                        {ticket.priority}
-                      </span>
-                    </td>
-                    <td className="py-3 px-4">
-                      <span className={`text-xs font-bold px-2.5 py-1 rounded-full border ${STATUS_STYLES[ticket.status] || STATUS_STYLES['Open']}`}>
-                        {ticket.status}
-                      </span>
-                    </td>
-                    <td className="py-3 px-4">
-                      <span className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1">
-                        <Clock size={11} />
-                        {new Date(ticket.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
-                      </span>
-                    </td>
-                    <td className="py-3 px-4">
-                      <div className="flex justify-end gap-1">
-                        <button onClick={() => setSelectedTicket(ticket)}
-                          title={canEdit ? "View & Update" : "View Details"}
-                          className="p-1.5 rounded-lg text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors">
-                          <Eye size={16} />
-                        </button>
-                        {canEdit && (
-                          <button onClick={() => handleDelete(ticket._id)}
-                            title="Delete"
-                            className="p-1.5 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
-                            <Trash2 size={16} />
-                          </button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                      <span className={`w-2.5 h-2.5 rounded-full ${PRIORITY_DOT[ticket.priority] || 'bg-amber-400'}`} title={`Priority: ${ticket.priority}`} />
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          ))}
         </div>
-        {/* Footer row count */}
-        {!loading && filtered.length > 0 && (
-          <div className="px-4 py-3 border-t border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 text-xs text-slate-500 dark:text-slate-400">
-            Showing {filtered.length} of {tickets.length} tickets
-          </div>
-        )}
-      </motion.div>
+      )}
 
       {selectedTicket && (
-        <TicketModal ticket={selectedTicket} onClose={() => setSelectedTicket(null)} onSaved={fetchTickets} canEdit={canEdit} />
+        <TicketModal ticket={selectedTicket} onClose={() => setSelectedTicket(null)} onSaved={fetchTickets} canEdit={canEdit} admins={admins} currentUser={user} />
       )}
       {showCreate && (
         <CreateTicketModal onClose={() => setShowCreate(false)} onSaved={fetchTickets} />

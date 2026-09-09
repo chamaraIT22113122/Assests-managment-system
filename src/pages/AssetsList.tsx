@@ -111,7 +111,7 @@ const AssetsList = () => {
     e.preventDefault();
     if (!canEdit) return;
     if (editingId) {
-      await api.assets.update(editingId, formData);
+      await api.assets.update(editingId, { ...formData, adminName: user?.name || 'Admin' });
     } else {
       await api.assets.create(formData);
     }
