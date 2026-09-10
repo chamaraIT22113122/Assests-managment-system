@@ -169,5 +169,19 @@ export const api = {
       });
       return res.json();
     }
+  },
+  recycleBin: {
+    getAll: async () => {
+      const res = await fetch(`${BASE_URL}/recycle-bin`);
+      return res.json();
+    },
+    restore: async (table: string, id: string) => {
+      const res = await fetch(`${BASE_URL}/recycle-bin/restore/${table}/${id}`, { method: 'POST' });
+      return res.json();
+    },
+    permanentDelete: async (table: string, id: string) => {
+      const res = await fetch(`${BASE_URL}/recycle-bin/permanent/${table}/${id}`, { method: 'DELETE' });
+      return res.json();
+    }
   }
 };

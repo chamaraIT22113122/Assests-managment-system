@@ -167,6 +167,13 @@ async function initDB() {
       }
     }
 
+    
+    const tables = ['companies', 'products', 'users', 'licenses', 'assets', 'tickets', 'maintenance'];
+    for (const table of tables) {
+      await db(`ALTER TABLE ${table} ADD COLUMN IF NOT EXISTS is_deleted BOOLEAN DEFAULT false`).catch(() => {});
+      await db(`ALTER TABLE ${table} ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ`).catch(() => {});
+    }
+  
     console.log('[DB] Neon Postgres tables ready.');
   } catch (err) {
     console.error('[DB] Error initializing tables:', err.message);
@@ -197,7 +204,7 @@ app.post('/api/iot/ping', async (req, res) => {
 // ─────────────────────────────────────────────
 app.get('/api/assets', async (req, res) => {
   try {
-    const { rows } = await db('SELECT * FROM assets ORDER BY created_at DESC');
+    const { rows } = await db('SELECT * FROM assets WHERE is_deleted = false ORDER BY created_at DESC');
     const assets = rows.map(mapAsset);
     res.json(assets);
   } catch (err) {
@@ -209,7 +216,7 @@ app.get('/api/assets', async (req, res) => {
 app.get('/api/assets/by-company/:companyName', async (req, res) => {
   try {
     const { rows } = await db(
-      'SELECT * FROM assets WHERE LOWER(company) = LOWER($1) ORDER BY name ASC',
+      'SELECT * FROM assets WHERE LOWER(company) = LOWER($1) AND is_deleted = false ORDER BY name ASC',
       [req.params.companyName]
     );
     res.json(rows.map(mapAsset));
@@ -290,7 +297,7 @@ app.put('/api/assets/:id', async (req, res) => {
 
 app.delete('/api/assets/:id', async (req, res) => {
   try {
-    await db('DELETE FROM assets WHERE id = $1', [req.params.id]);
+    await db('UPDATE assets SET is_deleted = true, deleted_at = NOW() WHERE id = $1', [req.params.id]);
     res.json({ success: true });
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -309,6 +316,7 @@ app.get('/api/tickets', async (req, res) => {
       FROM tickets t
       LEFT JOIN users u ON t.submitted_by = u.id
       LEFT JOIN users a ON t.assigned_to = a.id
+      WHERE t.is_deleted = false
       ORDER BY t.created_at DESC
     `);
     const tickets = rows.map(mapTicket);
@@ -325,7 +333,7 @@ app.get('/api/tickets/my/:userId', async (req, res) => {
         json_build_object('id', u.id, 'name', u.name, 'companyId', u.company_id) as submitted_by_user
       FROM tickets t
       LEFT JOIN users u ON t.submitted_by = u.id
-      WHERE t.submitted_by = $1
+      WHERE t.submitted_by = $1 AND t.is_deleted = false
       ORDER BY t.created_at DESC
     `, [req.params.userId]);
     res.json(rows.map(mapTicket));
@@ -378,7 +386,7 @@ app.put('/api/tickets/:id', async (req, res) => {
 
 app.delete('/api/tickets/:id', async (req, res) => {
   try {
-    await db('DELETE FROM tickets WHERE id = $1', [req.params.id]);
+    await db('UPDATE tickets SET is_deleted = true, deleted_at = NOW() WHERE id = $1', [req.params.id]);
     res.json({ success: true });
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -429,7 +437,7 @@ app.post('/api/auth/login', async (req, res) => {
 // ─────────────────────────────────────────────
 app.get('/api/companies', async (req, res) => {
   try {
-    const { rows } = await db('SELECT * FROM companies ORDER BY created_at DESC');
+    const { rows } = await db('SELECT * FROM companies WHERE is_deleted = false ORDER BY created_at DESC');
     res.json(rows.map(c => ({ _id: c.id, ...c })));
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -464,7 +472,7 @@ app.put('/api/companies/:id', async (req, res) => {
 
 app.delete('/api/companies/:id', async (req, res) => {
   try {
-    await db('DELETE FROM companies WHERE id=$1', [req.params.id]);
+    await db('UPDATE companies SET is_deleted = true, deleted_at = NOW() WHERE id=$1', [req.params.id]);
     res.json({ success: true });
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -476,7 +484,7 @@ app.delete('/api/companies/:id', async (req, res) => {
 // ─────────────────────────────────────────────
 app.get('/api/products', async (req, res) => {
   try {
-    const { rows } = await db('SELECT * FROM products ORDER BY name ASC');
+    const { rows } = await db('SELECT * FROM products WHERE is_deleted = false ORDER BY name ASC');
     res.json(rows.map(p => ({ _id: p.id, ...p })));
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -509,7 +517,7 @@ app.put('/api/products/:id', async (req, res) => {
 
 app.delete('/api/products/:id', async (req, res) => {
   try {
-    await db('DELETE FROM products WHERE id=$1', [req.params.id]);
+    await db('UPDATE products SET is_deleted = true, deleted_at = NOW() WHERE id=$1', [req.params.id]);
     res.json({ success: true });
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -521,7 +529,7 @@ app.delete('/api/products/:id', async (req, res) => {
 // ─────────────────────────────────────────────
 app.get('/api/users', async (req, res) => {
   try {
-    const { rows } = await db("SELECT id, name, email, company_id, company_name, role, can_edit, can_view, created_at FROM users WHERE role != 'admin' ORDER BY created_at DESC");
+    const { rows } = await db("SELECT id, name, email, company_id, company_name, role, can_edit, can_view, created_at FROM users WHERE role != 'admin' AND is_deleted = false ORDER BY created_at DESC");
     res.json(rows.map(u => ({ _id: u.id, companyId: u.company_id, companyName: u.company_name, ...u })));
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -556,7 +564,7 @@ app.put('/api/users/:id', async (req, res) => {
 
 app.delete('/api/users/:id', async (req, res) => {
   try {
-    await db('DELETE FROM users WHERE id=$1', [req.params.id]);
+    await db('UPDATE users SET is_deleted = true, deleted_at = NOW() WHERE id=$1', [req.params.id]);
     res.json({ success: true });
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -655,7 +663,7 @@ app.delete('/api/admins/:id', async (req, res) => {
     if (rows[0]?.name === 'System Administrator') {
       return res.status(403).json({ error: 'Cannot delete the System Administrator account.' });
     }
-    await db("DELETE FROM users WHERE id = $1 AND role = 'admin'", [req.params.id]);
+    await db("UPDATE users SET is_deleted = true, deleted_at = NOW() WHERE id = $1 AND role = 'admin'", [req.params.id]);
     res.json({ success: true });
   } catch (err) { res.status(400).json({ error: err.message }); }
 });
@@ -670,7 +678,7 @@ app.delete('/api/admins/:id', async (req, res) => {
 // ─────────────────────────────────────────────
 app.get('/api/licenses', async (req, res) => {
   try {
-    const { rows } = await db('SELECT * FROM licenses ORDER BY created_at DESC');
+    const { rows } = await db('SELECT * FROM licenses WHERE is_deleted = false ORDER BY created_at DESC');
     res.json(rows.map(l => ({ _id: l.id, ...l })));
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -703,7 +711,7 @@ app.put('/api/licenses/:id', async (req, res) => {
 
 app.delete('/api/licenses/:id', async (req, res) => {
   try {
-    await db('DELETE FROM licenses WHERE id=$1', [req.params.id]);
+    await db('UPDATE licenses SET is_deleted = true, deleted_at = NOW() WHERE id=$1', [req.params.id]);
     res.json({ success: true });
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -712,14 +720,14 @@ app.delete('/api/licenses/:id', async (req, res) => {
 
 app.get('/api/tickets/maintenance', async (req, res) => {
   try {
-    const { rows } = await db('SELECT * FROM maintenance ORDER BY created_at DESC');
+    const { rows } = await db('SELECT * FROM maintenance WHERE is_deleted = false ORDER BY created_at DESC');
     res.json(rows.map(r => ({ _id: r.id, ...r })));
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
 app.get('/api/maintenance', async (req, res) => {
   try {
-    const { rows } = await db('SELECT * FROM maintenance ORDER BY created_at DESC');
+    const { rows } = await db('SELECT * FROM maintenance WHERE is_deleted = false ORDER BY created_at DESC');
     res.json(rows.map(r => ({ _id: r.id, ...r })));
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
@@ -751,7 +759,7 @@ app.post('/api/maintenance', async (req, res) => {
 // Get maintenance jobs by ticket ID
 app.get('/api/maintenance/by-ticket/:ticketId', async (req, res) => {
   try {
-    const { rows } = await db('SELECT * FROM maintenance WHERE ticket_id = $1 ORDER BY created_at DESC LIMIT 1', [req.params.ticketId]);
+    const { rows } = await db('SELECT * FROM maintenance WHERE ticket_id = $1 AND is_deleted = false ORDER BY created_at DESC LIMIT 1', [req.params.ticketId]);
     if (!rows.length) return res.json(null);
     const r = rows[0];
     res.json({ _id: r.id, ...r });
@@ -805,7 +813,7 @@ app.put('/api/maintenance/:id', async (req, res) => {
 // Delete maintenance job
 app.delete('/api/maintenance/:id', async (req, res) => {
   try {
-    await db('DELETE FROM maintenance WHERE id = $1', [req.params.id]);
+    await db('UPDATE maintenance SET is_deleted = true, deleted_at = NOW() WHERE id = $1', [req.params.id]);
     res.json({ success: true });
   } catch (err) { res.status(400).json({ error: err.message }); }
 });

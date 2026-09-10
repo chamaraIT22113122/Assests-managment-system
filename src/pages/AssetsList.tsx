@@ -82,7 +82,10 @@ const AssetsList = () => {
         status: 'Brand New',
     lifecycleState: 'Procured',
     warrantyStart: '',
-    warrantyEnd: ''
+    warrantyEnd: '',
+    ownershipType: 'Owned',
+    rentalPeriod: 'Monthly',
+    customRentalPeriod: ''
   });
 
   useEffect(() => {
@@ -150,7 +153,10 @@ const AssetsList = () => {
         status: mappedStatus,
         lifecycleState: asset.lifecycleState || 'Procured',
         warrantyStart: asset.warrantyStart ? asset.warrantyStart.split('T')[0] : '',
-        warrantyEnd: asset.warrantyEnd ? asset.warrantyEnd.split('T')[0] : ''
+        warrantyEnd: asset.warrantyEnd ? asset.warrantyEnd.split('T')[0] : '',
+        ownershipType: asset.specs?.ownershipType || 'Owned',
+        rentalPeriod: asset.specs?.rentalPeriod || 'Monthly',
+        customRentalPeriod: asset.specs?.customRentalPeriod || ''
       });
       setMemberSearchQuery(asset.assignedTo || '');
     } else {
@@ -165,7 +171,10 @@ const AssetsList = () => {
             status: 'Brand New',
         lifecycleState: 'Procured',
         warrantyStart: '',
-        warrantyEnd: ''
+        warrantyEnd: '',
+        ownershipType: 'Owned',
+        rentalPeriod: 'Monthly',
+        customRentalPeriod: ''
       });
       setMemberSearchQuery('');
     }
@@ -407,6 +416,19 @@ const AssetsList = () => {
                             </p>
                           </div>
                         </div>
+                        {selectedAsset.specs?.ownershipType === 'Rental' && (
+                          <div className="flex gap-3 items-start">
+                            <Box size={16} className="text-slate-400 mt-0.5" />
+                            <div>
+                              <p className="text-xs text-slate-500">Rental Period</p>
+                              <p className="text-sm font-medium text-slate-800 dark:text-slate-200">
+                                {selectedAsset.specs?.rentalPeriod === 'Custom' 
+                                  ? selectedAsset.specs?.customRentalPeriod 
+                                  : selectedAsset.specs?.rentalPeriod}
+                              </p>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -563,8 +585,34 @@ const AssetsList = () => {
                     </div>
                   </div>
 
-                  {/* Warranty & Status */}
+                  {/* Warranty, Status & Ownership */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Ownership Type</label>
+                      <select required value={formData.ownershipType} onChange={(e) => setFormData({...formData, ownershipType: e.target.value})} className="w-full px-3 py-2 border border-slate-200 dark:border-slate-700 rounded-lg dark:bg-slate-900 dark:text-white outline-none focus:border-blue-500">
+                        <option value="Owned">Owned</option>
+                        <option value="Rental">Rental</option>
+                      </select>
+                    </div>
+
+                    {formData.ownershipType === 'Rental' && (
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Rental Period</label>
+                        <select required value={formData.rentalPeriod} onChange={(e) => setFormData({...formData, rentalPeriod: e.target.value})} className="w-full px-3 py-2 border border-slate-200 dark:border-slate-700 rounded-lg dark:bg-slate-900 dark:text-white outline-none focus:border-blue-500">
+                          <option value="Monthly">Monthly</option>
+                          <option value="Yearly">Yearly</option>
+                          <option value="Custom">Customizable</option>
+                        </select>
+                      </div>
+                    )}
+
+                    {formData.ownershipType === 'Rental' && formData.rentalPeriod === 'Custom' && (
+                      <div className="md:col-span-2">
+                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Custom Rental Period</label>
+                        <input required type="text" value={formData.customRentalPeriod} onChange={(e) => setFormData({...formData, customRentalPeriod: e.target.value})} className="w-full px-3 py-2 border border-slate-200 dark:border-slate-700 rounded-lg dark:bg-slate-900 dark:text-white outline-none focus:border-blue-500" placeholder="e.g. 6 Months, Bi-Weekly" />
+                      </div>
+                    )}
+
                     <div>
                       <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Warranty Start Date</label>
                       <input type="date" value={formData.warrantyStart} onChange={(e) => setFormData({...formData, warrantyStart: e.target.value})} className="w-full px-3 py-2 border border-slate-200 dark:border-slate-700 rounded-lg dark:bg-slate-900 dark:text-white outline-none focus:border-blue-500" />

@@ -6,6 +6,7 @@ import { useAuth } from '../context/AuthContext';
 const Licenses = () => {
   const { user } = useAuth();
   const [licenses, setLicenses] = useState<any[]>([]);
+  const [companies, setCompanies] = useState<any[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState({ name: '', key: '', seats: 1, renewalDate: '', company: '' });
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -14,6 +15,7 @@ const Licenses = () => {
 
   useEffect(() => {
     loadLicenses();
+    api.companies.getAll().then(setCompanies);
   }, []);
 
   const loadLicenses = () => {
@@ -202,13 +204,18 @@ const Licenses = () => {
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Company (Optional)</label>
-                <input 
-                  type="text" 
-                  value={formData.company} onChange={(e) => setFormData({...formData, company: e.target.value})}
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Company</label>
+                <select 
+                  required
+                  value={formData.company} 
+                  onChange={(e) => setFormData({...formData, company: e.target.value})}
                   className="w-full px-4 py-2 border border-slate-200 dark:border-slate-700 rounded-lg dark:bg-slate-900 dark:text-white outline-none focus:border-[#3b5998]"
-                  placeholder="e.g. Acme Corp"
-                />
+                >
+                  <option value="" disabled>Select a company</option>
+                  {companies.map(c => (
+                    <option key={c._id} value={c.name}>{c.name}</option>
+                  ))}
+                </select>
               </div>
 
               <div className="pt-4 flex justify-end gap-3">
