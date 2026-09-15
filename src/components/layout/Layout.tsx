@@ -9,7 +9,7 @@ const Layout = () => {
   const { theme, toggleTheme } = useTheme();
 
   return (
-    <div className="flex h-screen bg-slate-50 dark:bg-slate-950 transition-colors duration-300 font-sans text-slate-900 dark:text-slate-100 overflow-hidden">
+    <div className="flex h-screen bg-white dark:bg-slate-950 transition-colors duration-300 font-sans text-[#000000] dark:text-slate-100 overflow-hidden">
       {/* Mobile Menu Overlay */}
       {isMobileMenuOpen && (
         <div 
@@ -27,14 +27,14 @@ const Layout = () => {
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0 h-screen">
         {/* Mobile Header */}
-        <header className="md:hidden bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-4 py-4 flex items-center justify-between shrink-0">
+        <header className="md:hidden bg-white dark:bg-[#000000] border-b border-slate-400 dark:border-slate-800 px-4 py-4 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
-            <button onClick={() => setIsMobileMenuOpen(true)} className="text-slate-600 dark:text-slate-300 p-1">
+            <button onClick={() => setIsMobileMenuOpen(true)} className="text-slate-800 dark:text-slate-300 p-1">
               <Menu size={24} />
             </button>
-            <span className="text-lg font-bold tracking-tight text-slate-800 dark:text-white">ASSETTO</span>
+            <span className="text-lg font-bold tracking-tight text-[#000000] dark:text-[#e5e4e2]">AssetCo</span>
           </div>
-          <button onClick={toggleTheme} className="text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors p-1">
+          <button onClick={toggleTheme} className="text-slate-800 hover:text-slate-800 dark:hover:text-white transition-colors p-1">
             {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
           </button>
         </header>
@@ -48,7 +48,7 @@ const Layout = () => {
 
       {/* Floating credit */}
       <div className="fixed bottom-3 right-4 pointer-events-none z-50">
-        <span className="text-[11px] text-slate-400/70 dark:text-slate-500/70 select-none">
+        <span className="text-[11px] text-slate-800/70 dark:text-slate-500/70 select-none">
           © Developed by Megakem
         </span>
       </div>

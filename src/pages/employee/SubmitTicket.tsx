@@ -40,15 +40,15 @@ const SubmitTicket = () => {
 
   return (
     <div className="py-8 max-w-2xl mx-auto">
-      <h1 className="text-2xl font-bold mb-6 text-slate-800 dark:text-white">Submit a Support Ticket</h1>
-      <form onSubmit={handleSubmit} className="bg-white dark:bg-slate-800 p-8 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 space-y-6">
+      <h1 className="text-2xl font-bold mb-6 text-[#000000] dark:text-[#e5e4e2]">Submit a Support Ticket</h1>
+      <form onSubmit={handleSubmit} className="bg-[#e5e4e2] dark:bg-[#000000] p-8 rounded-xl shadow-md border border-slate-300 dark:border-slate-700 space-y-6">
         <div>
           <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Issue Title</label>
           <input 
             type="text" 
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className="w-full px-4 py-2 border border-slate-200 dark:border-slate-700 rounded-lg dark:bg-slate-900 dark:text-white outline-none focus:border-[#3b5998]"
+            className="w-full px-4 py-2 border border-slate-400 dark:border-slate-700 rounded-lg dark:bg-[#000000] dark:text-[#e5e4e2] outline-none focus:border-[#fcaf17]"
             placeholder="e.g. Laptop won't turn on"
             required
           />
@@ -58,7 +58,7 @@ const SubmitTicket = () => {
           <select 
             value={priority}
             onChange={(e) => setPriority(e.target.value)}
-            className="w-full px-4 py-2 border border-slate-200 dark:border-slate-700 rounded-lg dark:bg-slate-900 dark:text-white outline-none focus:border-[#3b5998]"
+            className="w-full px-4 py-2 border border-slate-400 dark:border-slate-700 rounded-lg dark:bg-[#000000] dark:text-[#e5e4e2] outline-none focus:border-[#fcaf17]"
           >
             <option value="Low">Low</option>
             <option value="Medium">Medium</option>
@@ -71,7 +71,7 @@ const SubmitTicket = () => {
           <textarea 
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            className="w-full px-4 py-2 border border-slate-200 dark:border-slate-700 rounded-lg dark:bg-slate-900 dark:text-white h-32 outline-none focus:border-[#3b5998]"
+            className="w-full px-4 py-2 border border-slate-400 dark:border-slate-700 rounded-lg dark:bg-[#000000] dark:text-[#e5e4e2] h-32 outline-none focus:border-[#fcaf17]"
             placeholder="Please describe the issue in detail..."
             required
           />
@@ -79,7 +79,7 @@ const SubmitTicket = () => {
         <button 
           type="submit" 
           disabled={loading}
-          className="w-full bg-[#3b5998] hover:bg-blue-700 disabled:opacity-70 text-white font-medium py-3 rounded-lg transition-colors"
+          className="w-full bg-[#fcaf17] hover:bg-blue-700 disabled:opacity-70 text-white font-medium py-3 rounded-lg transition-colors"
         >
           {loading ? 'Submitting...' : 'Submit Ticket to Admin'}
         </button>

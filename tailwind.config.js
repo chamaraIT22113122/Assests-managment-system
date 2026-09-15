@@ -8,6 +8,18 @@ export default {
   theme: {
     extend: {
       colors: {
+        blue: {
+          50: '#fff7e3',
+          100: '#ffecb8',
+          200: '#ffdc8a',
+          300: '#ffc85c',
+          400: '#fcaf17',
+          500: '#f09d00',
+          600: '#d48200',
+          700: '#b06500',
+          800: '#8f4f00',
+          900: '#754000',
+        },
         primary: {
           50: '#f0f9ff',
           100: '#e0f2fe',
@@ -22,11 +34,11 @@ export default {
         },
         surface: {
           light: '#ffffff',
-          dark: '#1e293b',
+          dark: '#000000',
         },
         background: {
-          light: '#f8fafc',
-          dark: '#0f172a',
+          light: '#ffffff',
+          dark: '#000000',
         }
       },
       fontFamily: {

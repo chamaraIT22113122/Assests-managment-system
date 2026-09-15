@@ -76,7 +76,7 @@ function App() {
               <Route path="submit-ticket" element={<SubmitTicket />} />
             </Route>
 
-            <Route path="*" element={<div className="p-8 text-center text-slate-500">Page not found</div>} />
+            <Route path="*" element={<div className="p-8 text-center text-slate-700">Page not found</div>} />
           </Routes>
         </Router>
       </AuthProvider>

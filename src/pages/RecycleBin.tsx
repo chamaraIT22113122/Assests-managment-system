@@ -49,18 +49,18 @@ const RecycleBin = () => {
       case 'User': return <Users size={15} className={`${cls} text-purple-500`} />;
       case 'License': return <Key size={15} className={`${cls} text-pink-500`} />;
       case 'Maintenance': return <Wrench size={15} className={`${cls} text-cyan-500`} />;
-      default: return <Box size={15} className={`${cls} text-slate-400`} />;
+      default: return <Box size={15} className={`${cls} text-slate-800`} />;
     }
   };
 
   if (!canManage) {
     return (
       <div className="py-8">
-        <h1 className="text-2xl font-bold mb-6 text-slate-800 dark:text-white">Recycle Bin</h1>
-        <div className="bg-white dark:bg-slate-800 p-12 rounded-xl shadow-sm text-center border border-slate-100 dark:border-slate-700">
+        <h1 className="text-2xl font-bold mb-6 text-[#000000] dark:text-[#e5e4e2]">Recycle Bin</h1>
+        <div className="bg-[#e5e4e2] dark:bg-[#000000] p-12 rounded-xl shadow-md text-center border border-slate-300 dark:border-slate-700">
           <Trash2 size={48} className="mx-auto text-slate-300 dark:text-slate-600 mb-4" />
           <h2 className="text-lg font-semibold text-slate-700 dark:text-slate-300">Access Denied</h2>
-          <p className="text-slate-500 dark:text-slate-400 mt-2">Only administrators can access the Recycle Bin.</p>
+          <p className="text-slate-700 dark:text-slate-400 mt-2">Only administrators can access the Recycle Bin.</p>
         </div>
       </div>
     );
@@ -70,51 +70,52 @@ const RecycleBin = () => {
     <div className="py-8 space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-800 dark:text-white flex items-center gap-2">
-            <Trash2 size={24} className="text-slate-400" /> Recycle Bin
+          <h1 className="text-2xl font-bold text-[#000000] dark:text-[#e5e4e2] flex items-center gap-2">
+            <Trash2 size={24} className="text-slate-800" /> Recycle Bin
           </h1>
-          <p className="text-slate-500 text-sm mt-1">
+          <p className="text-slate-700 text-sm mt-1">
             {items.length} deleted {items.length === 1 ? 'item' : 'items'} — restore or permanently remove them.
           </p>
         </div>
       </div>
 
-      <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-hidden">
-        <table className="w-full text-left border-collapse">
-          <thead>
-            <tr className="bg-slate-50 dark:bg-slate-700/50 border-b border-slate-100 dark:border-slate-700 text-sm text-slate-500 dark:text-slate-400">
-              <th className="py-3 px-5 font-medium">Type</th>
-              <th className="py-3 px-5 font-medium">Name / Identifier</th>
-              <th className="py-3 px-5 font-medium">Deleted On</th>
-              <th className="py-3 px-5 font-medium text-right">Actions</th>
-            </tr>
-          </thead>
+      <div className="bg-[#e5e4e2] dark:bg-[#000000] rounded-2xl shadow-md border border-slate-300 dark:border-slate-700 overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-[#e5e4e2] dark:bg-slate-700/50 border-b border-slate-300 dark:border-slate-700 text-sm text-slate-700 dark:text-slate-400">
+                <th className="py-3 px-5 font-medium whitespace-nowrap">Type</th>
+                <th className="py-3 px-5 font-medium whitespace-nowrap">Name / Identifier</th>
+                <th className="hidden sm:table-cell py-3 px-5 font-medium whitespace-nowrap">Deleted On</th>
+                <th className="py-3 px-5 font-medium text-right whitespace-nowrap">Actions</th>
+              </tr>
+            </thead>
           <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
             {loading ? (
               <tr>
-                <td colSpan={4} className="py-10 text-center text-slate-400">Loading deleted items...</td>
+                <td colSpan={4} className="py-10 text-center text-slate-800">Loading deleted items...</td>
               </tr>
             ) : items.length === 0 ? (
               <tr>
                 <td colSpan={4} className="py-16 text-center">
                   <Trash2 size={40} className="mx-auto text-slate-200 dark:text-slate-700 mb-3" />
-                  <p className="text-slate-500 dark:text-slate-400 font-medium">The recycle bin is empty</p>
-                  <p className="text-slate-400 dark:text-slate-500 text-sm mt-1">Deleted items from the system will appear here.</p>
+                  <p className="text-slate-700 dark:text-slate-400 font-medium">The recycle bin is empty</p>
+                  <p className="text-slate-800 dark:text-slate-500 text-sm mt-1">Deleted items from the system will appear here.</p>
                 </td>
               </tr>
             ) : (
               items.map((item) => (
-                <tr key={`${item.tableName}-${item.id}`} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                <tr key={`${item.tableName}-${item.id}`} className="hover:bg-[#e5e4e2] dark:hover:bg-slate-800/50 transition-colors">
                   <td className="py-3 px-5 text-sm">
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-slate-100 dark:bg-slate-900 rounded-lg text-slate-700 dark:text-slate-300 font-medium text-xs">
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-slate-100 dark:bg-[#000000] rounded-lg text-slate-700 dark:text-slate-300 font-medium text-xs">
                       {typeIcon(item.type)}
                       {item.type}
                     </span>
                   </td>
-                  <td className="py-3 px-5 text-sm font-semibold text-slate-800 dark:text-slate-200">
+                  <td className="py-3 px-5 text-sm font-semibold text-[#000000] dark:text-[#e5e4e2]">
                     {item.title || '—'}
                   </td>
-                  <td className="py-3 px-5 text-sm text-slate-500 dark:text-slate-400">
+                  <td className="hidden sm:table-cell py-3 px-5 text-sm text-slate-700 dark:text-slate-400">
                     {item.deletedAt ? new Date(item.deletedAt).toLocaleString() : '—'}
                   </td>
                   <td className="py-3 px-5 text-sm">
@@ -138,6 +139,7 @@ const RecycleBin = () => {
             )}
           </tbody>
         </table>
+        </div>
       </div>
     </div>
   );

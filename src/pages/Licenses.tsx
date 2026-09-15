@@ -83,44 +83,45 @@ const Licenses = () => {
   return (
     <div className="py-8">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-slate-800 dark:text-white">Software Licenses</h1>
+        <h1 className="text-2xl font-bold text-[#000000] dark:text-[#e5e4e2]">Software Licenses</h1>
         {canEdit && (
           <button 
             onClick={() => openModal()}
-            className="bg-[#3b5998] hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium flex items-center gap-2 transition-colors shadow-sm"
+            className="bg-[#fcaf17] hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium flex items-center gap-2 transition-colors shadow-md"
           >
             <Plus size={18} /> Add License
           </button>
         )}
       </div>
 
-      <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-hidden">
-        <table className="w-full text-left border-collapse">
-          <thead>
-            <tr className="bg-slate-50 dark:bg-slate-700/50 border-b border-slate-100 dark:border-slate-700">
-              <th className="py-3 px-4 font-semibold text-sm text-slate-600 dark:text-slate-300">Software Name</th>
-              <th className="py-3 px-4 font-semibold text-sm text-slate-600 dark:text-slate-300">License Key</th>
-              <th className="py-3 px-4 font-semibold text-sm text-slate-600 dark:text-slate-300">Seats</th>
-              <th className="py-3 px-4 font-semibold text-sm text-slate-600 dark:text-slate-300">Company</th>
-              <th className="py-3 px-4 font-semibold text-sm text-slate-600 dark:text-slate-300">Renewal Date</th>
-              {canEdit && <th className="py-3 px-4 font-semibold text-sm text-slate-600 dark:text-slate-300 text-right">Actions</th>}
-            </tr>
-          </thead>
+      <div className="bg-[#e5e4e2] dark:bg-[#000000] rounded-xl shadow-md border border-slate-300 dark:border-slate-700 overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-[#e5e4e2] dark:bg-slate-700/50 border-b border-slate-300 dark:border-slate-700">
+                <th className="py-3 px-4 font-semibold text-sm text-slate-800 dark:text-slate-300 whitespace-nowrap">Software Name</th>
+                <th className="py-3 px-4 font-semibold text-sm text-slate-800 dark:text-slate-300 whitespace-nowrap">License Key</th>
+                <th className="hidden sm:table-cell py-3 px-4 font-semibold text-sm text-slate-800 dark:text-slate-300 whitespace-nowrap">Seats</th>
+                <th className="hidden sm:table-cell py-3 px-4 font-semibold text-sm text-slate-800 dark:text-slate-300 whitespace-nowrap">Company</th>
+                <th className="py-3 px-4 font-semibold text-sm text-slate-800 dark:text-slate-300 whitespace-nowrap">Renewal Date</th>
+                {canEdit && <th className="py-3 px-4 font-semibold text-sm text-slate-800 dark:text-slate-300 text-right whitespace-nowrap">Actions</th>}
+              </tr>
+            </thead>
           <tbody>
             {licenses.map((license) => (
-              <tr key={license._id} className="border-b border-slate-50 dark:border-slate-700/50 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                <td className="py-3 px-4 text-sm font-medium text-slate-800 dark:text-slate-200">
+              <tr key={license._id} className="border-b border-slate-50 dark:border-slate-700/50 hover:bg-[#e5e4e2] dark:hover:bg-slate-800/50 transition-colors">
+                <td className="py-3 px-4 text-sm font-medium text-[#000000] dark:text-[#e5e4e2]">
                   {license.name}
                 </td>
-                <td className="py-3 px-4 text-sm text-slate-500 dark:text-slate-400 font-mono">
+                <td className="py-3 px-4 text-sm text-slate-700 dark:text-slate-400 font-mono">
                   {license.key ? (
-                    <span className="bg-slate-100 dark:bg-slate-900 px-2 py-1 rounded text-xs flex items-center gap-1 w-max">
+                    <span className="bg-slate-100 dark:bg-[#000000] px-2 py-1 rounded text-xs flex items-center gap-1 w-max">
                       <Key size={12} /> {license.key.length > 20 ? license.key.substring(0, 20) + '...' : license.key}
                     </span>
                   ) : '-'}
                 </td>
-                <td className="py-3 px-4 text-sm text-slate-500 dark:text-slate-400">{license.seats}</td>
-                <td className="py-3 px-4 text-sm text-slate-500 dark:text-slate-400">{license.company || '-'}</td>
+                <td className="hidden sm:table-cell py-3 px-4 text-sm text-slate-700 dark:text-slate-400">{license.seats}</td>
+                <td className="hidden sm:table-cell py-3 px-4 text-sm text-slate-700 dark:text-slate-400">{license.company || '-'}</td>
                 <td className="py-3 px-4 text-sm">
                   {license.renewal_date ? (
                     <span className={`flex items-center gap-1.5 w-max px-2.5 py-1 rounded-md text-xs font-semibold ${
@@ -145,19 +146,20 @@ const Licenses = () => {
             ))}
             {licenses.length === 0 && (
               <tr>
-                <td colSpan={canEdit ? 6 : 5} className="py-8 text-center text-slate-500 dark:text-slate-400">No licenses found.</td>
+                <td colSpan={canEdit ? 6 : 5} className="py-8 text-center text-slate-700 dark:text-slate-400">No licenses found.</td>
               </tr>
             )}
           </tbody>
         </table>
+        </div>
       </div>
 
       {isModalOpen && canEdit && (
         <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-slate-800 rounded-2xl w-full max-w-md shadow-xl overflow-hidden max-h-[90vh] flex flex-col">
-            <div className="flex justify-between items-center p-6 border-b border-slate-100 dark:border-slate-700 shrink-0">
-              <h2 className="text-xl font-bold text-slate-800 dark:text-white">{editingId ? 'Edit License' : 'Add License'}</h2>
-              <button onClick={closeModal} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"><X size={20} /></button>
+          <div className="bg-[#e5e4e2] dark:bg-[#000000] rounded-2xl w-full max-w-md shadow-xl overflow-hidden max-h-[90vh] flex flex-col">
+            <div className="flex justify-between items-center p-6 border-b border-slate-300 dark:border-slate-700 shrink-0">
+              <h2 className="text-xl font-bold text-[#000000] dark:text-[#e5e4e2]">{editingId ? 'Edit License' : 'Add License'}</h2>
+              <button onClick={closeModal} className="text-slate-800 hover:text-slate-800 dark:hover:text-slate-200"><X size={20} /></button>
             </div>
             <form onSubmit={handleSubmit} className="p-6 space-y-4 overflow-y-auto custom-scrollbar">
               
@@ -166,7 +168,7 @@ const Licenses = () => {
                 <input 
                   type="text" required 
                   value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})}
-                  className="w-full px-4 py-2 border border-slate-200 dark:border-slate-700 rounded-lg dark:bg-slate-900 dark:text-white outline-none focus:border-[#3b5998]"
+                  className="w-full px-4 py-2 border border-slate-400 dark:border-slate-700 rounded-lg dark:bg-[#000000] dark:text-[#e5e4e2] outline-none focus:border-[#fcaf17]"
                   placeholder="e.g. Adobe Creative Cloud"
                 />
               </div>
@@ -176,28 +178,28 @@ const Licenses = () => {
                 <input 
                   type="text" 
                   value={formData.key} onChange={(e) => setFormData({...formData, key: e.target.value})}
-                  className="w-full px-4 py-2 border border-slate-200 dark:border-slate-700 rounded-lg dark:bg-slate-900 dark:text-white font-mono outline-none focus:border-[#3b5998]"
+                  className="w-full px-4 py-2 border border-slate-400 dark:border-slate-700 rounded-lg dark:bg-[#000000] dark:text-[#e5e4e2] font-mono outline-none focus:border-[#fcaf17]"
                   placeholder="XXXX-XXXX-XXXX-XXXX"
                 />
               </div>
 
-              <div className="flex gap-4">
-                <div className="w-1/3">
+              <div className="flex flex-col sm:flex-row gap-4">
+                <div className="w-full sm:w-1/3">
                   <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Seats</label>
                   <input 
                     type="number" min="1" required
                     value={formData.seats} onChange={(e) => setFormData({...formData, seats: parseInt(e.target.value)})}
-                    className="w-full px-4 py-2 border border-slate-200 dark:border-slate-700 rounded-lg dark:bg-slate-900 dark:text-white outline-none focus:border-[#3b5998]"
+                    className="w-full px-4 py-2 border border-slate-400 dark:border-slate-700 rounded-lg dark:bg-[#000000] dark:text-[#e5e4e2] outline-none focus:border-[#fcaf17]"
                   />
                 </div>
-                <div className="flex-1">
+                <div className="w-full sm:flex-1">
                   <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Renewal Date</label>
                   <div className="relative">
-                    <Calendar className="absolute left-3 top-2.5 text-slate-400" size={18} />
+                    <Calendar className="absolute left-3 top-2.5 text-slate-800" size={18} />
                     <input 
                       type="date"
                       value={formData.renewalDate} onChange={(e) => setFormData({...formData, renewalDate: e.target.value})}
-                      className="w-full pl-10 pr-4 py-2 border border-slate-200 dark:border-slate-700 rounded-lg dark:bg-slate-900 dark:text-white outline-none focus:border-[#3b5998]"
+                      className="w-full pl-10 pr-4 py-2 border border-slate-400 dark:border-slate-700 rounded-lg dark:bg-[#000000] dark:text-[#e5e4e2] outline-none focus:border-[#fcaf17]"
                     />
                   </div>
                 </div>
@@ -209,7 +211,7 @@ const Licenses = () => {
                   required
                   value={formData.company} 
                   onChange={(e) => setFormData({...formData, company: e.target.value})}
-                  className="w-full px-4 py-2 border border-slate-200 dark:border-slate-700 rounded-lg dark:bg-slate-900 dark:text-white outline-none focus:border-[#3b5998]"
+                  className="w-full px-4 py-2 border border-slate-400 dark:border-slate-700 rounded-lg dark:bg-[#000000] dark:text-[#e5e4e2] outline-none focus:border-[#fcaf17]"
                 >
                   <option value="" disabled>Select a company</option>
                   {companies.map(c => (
@@ -219,8 +221,8 @@ const Licenses = () => {
               </div>
 
               <div className="pt-4 flex justify-end gap-3">
-                <button type="button" onClick={closeModal} className="px-4 py-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg font-medium transition-colors">Cancel</button>
-                <button type="submit" className="px-6 py-2 bg-[#3b5998] hover:bg-blue-700 text-white rounded-lg font-medium transition-colors shadow-sm">
+                <button type="button" onClick={closeModal} className="px-4 py-2 text-slate-800 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg font-medium transition-colors">Cancel</button>
+                <button type="submit" className="px-6 py-2 bg-[#fcaf17] hover:bg-blue-700 text-white rounded-lg font-medium transition-colors shadow-md">
                   {editingId ? 'Save Changes' : 'Add License'}
                 </button>
               </div>
