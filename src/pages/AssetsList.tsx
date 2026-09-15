@@ -250,7 +250,7 @@ const AssetsList = () => {
                 <th className="hidden sm:table-cell px-4 sm:px-6 py-4 font-medium">Category</th>
                 <th className="hidden md:table-cell px-4 sm:px-6 py-4 font-medium">Company</th>
                 <th className="px-4 sm:px-6 py-4 font-medium">Assigned To</th>
-                <th className="px-4 sm:px-6 py-4 font-medium">Status</th>
+                <th className="px-4 sm:px-6 py-4 font-medium">Condition</th>
                 <th className="hidden lg:table-cell px-4 sm:px-6 py-4 font-medium">Warranty Ends</th>
                 <th className="px-4 sm:px-6 py-4 font-medium text-right">Actions</th>
               </tr>
